@@ -27,7 +27,9 @@ computational-physics/
 │   └── transformada_de_fourier_ondas_aleatorias.py   # FFT of superposed random waves
 │
 └── processing_data(MD)/
-    └── EvsN.py                                  # Energy vs MD steps parser (VASP output)
+    ├── EvsN.py                                  # Energy vs MD steps parser (VASP output)
+    ├── EvsT.py                                  # Energy vs Temperature parser (VASP output)
+    └── xdatcar_to_jmol.py                       # XDATCAR → XYZ multi-frame converter for Jmol
 ```
 
 ---
@@ -201,6 +203,57 @@ python EvsN.py
 This script was used in research on NiTi shape memory alloys and FeRh magnetic alloys using the **VASP** package (Vienna Ab initio Simulation Package).
 
 ---
+#### `EvsT.py`
+Parser and plotter for **energy vs temperature** from VASP molecular dynamics output.
+
+- Reads `OUTCAR`-style output (`salida.txt`) using regex
+- Extracts temperature T and total energy E from each MD step
+- Uses pattern: `T=<int>. E=<float>` — handles scientific notation
+- Saves parsed data to `E_vs_T.dat`
+- Plots E vs T curve to visualize thermodynamic behavior across a temperature sweep
+
+```python
+# Requires: salida.txt (VASP OUTCAR or equivalent output)
+python EvsT.py
+# Output: E_vs_T.png, E_vs_T.dat
+```
+
+Useful for studying phase transitions and structural changes as a function of temperature — directly applied in NiTi and FeRh alloy research.
+
+---
+
+#### `xdatcar_to_jmol.py`
+Converts a **VASP XDATCAR file** to multi-frame XYZ format for visualization as an animation in [Jmol](http://jmol.sourceforge.net/) or [OVITO](https://www.ovito.org/).
+
+- Parses the full XDATCAR format: lattice vectors, species, counts, and fractional coordinates per frame
+- Converts **direct (fractional) coordinates → Cartesian (Ångström)** using the lattice matrix
+- Embeds lattice information in the XYZ comment line (compatible with Jmol and OVITO)
+- Supports frame filtering via `--step`, `--start`, `--end` CLI options
+- Prints a detailed summary of the trajectory on execution
+
+```bash
+# Basic usage
+python xdatcar_to_jmol.py XDATCAR output.xyz
+
+# Save every 5th frame, from config 100 to 500
+python xdatcar_to_jmol.py XDATCAR output.xyz --step 5 --start 100 --end 500
+```
+
+**Options:**
+
+| Flag | Default | Description |
+|---|---|---|
+| `--step N` | 1 | Save 1 out of every N frames |
+| `--start N` | first | First configuration number to include |
+| `--end N` | last | Last configuration number to include |
+
+**To visualize in Jmol:**
+```
+load "output.xyz"
+animation mode loop
+animation fps 10
+animation on
+```
 
 ##Installation
 
